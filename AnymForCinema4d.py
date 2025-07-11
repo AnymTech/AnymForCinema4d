@@ -475,6 +475,24 @@ def get_armature_data(root_c4d_object, scale=100):
                 abs_mg = c4d_obj.GetMg()
                 pos = abs_mg.off / scale 
                 root_pos = [pos.x, pos.y, -pos.z] 
+
+                master_ctrl = root_c4d_object.GetUp().GetUp()
+                current_c4d_hpb_rad = master_ctrl.GetAbsRot()
+                reconstructed_bvh_rot_matrix = c4d.utils.HPBToMatrix(current_c4d_hpb_rad, c4d.ROTATIONORDER_HPB)
+                raw_theta_y_rad = math.asin(-reconstructed_bvh_rot_matrix.v1.z)
+                raw_phi_x_rad = math.atan2(reconstructed_bvh_rot_matrix.v2.z, reconstructed_bvh_rot_matrix.v3.z)
+                raw_psi_z_rad = math.atan2(reconstructed_bvh_rot_matrix.v1.y, reconstructed_bvh_rot_matrix.v1.x)
+                cos_raw_theta_y = math.cos(raw_theta_y_rad)
+                if abs(cos_raw_theta_y) < 1e-6:
+                    raw_phi_x_rad = math.atan2(reconstructed_bvh_rot_matrix.v2.y, reconstructed_bvh_rot_matrix.v1.y)
+                    raw_psi_z_rad = 0.0
+                rot_x_deg_master = c4d.utils.RadToDeg(-raw_theta_y_rad)
+                rot_y_deg_master = c4d.utils.RadToDeg(-raw_phi_x_rad) - 90
+                rot_z_deg_master = c4d.utils.RadToDeg(raw_psi_z_rad)
+
+                rot_x_deg += rot_x_deg_master
+                rot_y_deg += rot_y_deg_master
+                rot_z_deg += rot_z_deg_master
                 
             current_joint_data['rot'] = [rot_z_deg, rot_x_deg, rot_y_deg] 
             all_joint_data[joint_name] = current_joint_data
