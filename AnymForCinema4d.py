@@ -486,8 +486,8 @@ def get_armature_data(root_c4d_object, scale=100):
                 if abs(cos_raw_theta_y) < 1e-6:
                     raw_phi_x_rad = math.atan2(reconstructed_bvh_rot_matrix.v2.y, reconstructed_bvh_rot_matrix.v1.y)
                     raw_psi_z_rad = 0.0
-                rot_x_deg_master = c4d.utils.RadToDeg(-raw_theta_y_rad)
-                rot_y_deg_master = c4d.utils.RadToDeg(-raw_phi_x_rad) - 90
+                rot_x_deg_master = 0 #c4d.utils.RadToDeg(-raw_theta_y_rad)
+                rot_y_deg_master = 0 #c4d.utils.RadToDeg(-raw_phi_x_rad) - 90
                 rot_z_deg_master = c4d.utils.RadToDeg(raw_psi_z_rad)
 
                 main_obj = root_c4d_object.GetUp().GetUp().GetUp()
