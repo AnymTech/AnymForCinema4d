@@ -490,9 +490,16 @@ def get_armature_data(root_c4d_object, scale=100):
                 rot_y_deg_master = c4d.utils.RadToDeg(-raw_phi_x_rad) - 90
                 rot_z_deg_master = c4d.utils.RadToDeg(raw_psi_z_rad)
 
-                rot_x_deg += rot_x_deg_master
-                rot_y_deg += rot_y_deg_master
-                rot_z_deg += rot_z_deg_master
+                main_obj = root_c4d_object.GetUp().GetUp().GetUp()
+                current_c4d_hpb_rad = main_obj.GetAbsRot()
+
+                rot_x_deg_main = c4d.utils.RadToDeg(current_c4d_hpb_rad.x)
+                rot_y_deg_main = c4d.utils.RadToDeg(current_c4d_hpb_rad.y) + 90
+                rot_z_deg_main = c4d.utils.RadToDeg(-current_c4d_hpb_rad.z)
+
+                rot_x_deg += rot_x_deg_master + rot_x_deg_main
+                rot_y_deg += rot_y_deg_master + rot_y_deg_main
+                rot_z_deg += rot_z_deg_master + rot_z_deg_main
                 
             current_joint_data['rot'] = [rot_z_deg, rot_x_deg, rot_y_deg] 
             all_joint_data[joint_name] = current_joint_data
