@@ -194,6 +194,7 @@ ANYM_POSES = {
     'running': '0.0 0.0 0.944308 12.812485 -3.764145 -3.449099 6.162934 -2.591651 21.884037 -16.779459 5.769927 1.611377 12.924832 2.332486 2.128104 0.000000 0.000000 -0.000001 2.281804 7.332328 -16.747847 -10.971671 -0.227808 8.013506 -23.763674 -7.757531 -2.377268 0.000000 0.000000 -0.000001 -10.430504 6.608937 6.446684 -10.014379 -4.599386 6.985147 -10.106457 -0.428153 2.249650 8.424983 -2.053782 -10.427315 2.427841 1.754064 0.686918 -6.744412 -1.306699 4.014442 -37.160491 65.066568 -17.400981 -107.616498 0.533386 23.300145 -20.239555 -7.541115 -2.493251 -8.147590 2.082604 4.206349 -35.837155 -62.851323 58.385568 113.784891 1.138298 20.943669 23.422029 -4.067571 -27.872150\n',
     'crouched': '0.0 0.0 0.792000 -7.587353 -3.244431 -5.244226 10.449458 -2.692427 1.237742 8.725213 8.053955 59.866197 28.034230 4.273684 -27.513477 -0.000001 -0.000000 0.000000 -12.310561 4.514536 -49.888928 -24.246104 5.546499 49.671887 -30.678573 9.327886 5.286487 0.000001 0.000000 0.000000 -8.409343 1.527181 46.302820 -4.850420 0.085146 10.987337 -3.818213 -0.937031 2.779952 15.485148 4.624125 9.982532 6.171311 -0.166689 -33.296183 -22.539460 -6.687543 -7.196572 -42.859961 27.952473 -40.464302 -95.768290 -24.000663 9.008869 -17.402181 -4.216924 19.540276 20.828827 7.671515 -3.644733 22.885188 -70.705963 -26.571569 73.503613 7.590814 9.765324 12.214401 -0.851391 0.037118\n',
     'fighting': '0.0 0.0 0.929197 1.998556 0.365758 -2.714235 11.078149 -15.233524 -13.417147 15.345969 0.333671 13.138032 12.556353 10.035754 18.094387 0.000000 0.000000 -0.000001 -7.943415 11.946518 7.718570 -9.117149 -5.011846 5.266846 -16.635733 -4.257653 0.560239 0.000000 0.000000 -0.000001 0.645713 -0.742055 11.902913 3.841259 2.161500 -1.203929 0.955819 0.166722 -0.892026 12.257349 -0.606808 2.459871 15.515777 3.088477 13.207125 -10.436967 -19.768036 -9.090913 -52.863180 56.077539 -40.028783 -112.513607 -29.267658 25.987605 -6.362055 -16.723496 -3.005818 13.895320 20.171606 -7.156372 83.480282 -55.718614 -57.387083 110.505613 0.414810 22.901932 13.447608 21.708462 -25.038953\n',
+    'sitting': '0.0 0.0 0.650314 0.148728 -0.260789 -21.601060 -0.428280 -9.546223 -47.886655 16.466000 13.628888 81.110183 13.259980 -3.624257 -0.020250 0.000000 0.000000 -0.000001 0.467240 6.678833 -47.886950 -9.634909 -8.815358 83.027363 -5.309852 -0.777132 -3.418623 0.000000 0.000000 -0.000001 0.400235 -0.105420 38.127067 -0.226107 -1.283918 -3.109104 0.555484 -0.836622 -2.611138 2.817394 6.459249 -8.912316 -4.327486 -2.552109 -22.467345 -4.756869 -11.397186 -1.170811 -91.265791 82.624034 -70.572455 -21.184846 -4.910739 18.320765 -2.831934 3.493047 13.986522 10.215900 7.534187 0.647334 44.359946 -77.712666 -35.760574 19.899903 5.481128 11.546334 4.304808 3.603755 1.737062\n',
 }
 
 BVH_JOINT_ORDER = [
@@ -614,57 +615,56 @@ def create_fk_controls(
     ctrl_map : dict[str,          c4d.BaseObject]             = {}
     top_offset: c4d.BaseObject|None = None
 
-    for j in fk_root.GetChildren():
-        todo = [j]
-        while todo:
-            j = todo.pop()
-            todo.extend(reversed(j.GetChildren()))
+    todo = [fk_root]
+    while todo:
+        j = todo.pop()
+        todo.extend(reversed(j.GetChildren()))
 
-            if not j.CheckType(c4d.Ojoint):
-                continue
-            if j is fk_root or "site" in j.GetName().lower():
-                continue
+        if not j.CheckType(c4d.Ojoint):
+            continue
+        if "site" in j.GetName().lower():
+            continue
 
-            axis = axis_from_name(j.GetName())
-            ctrl = c4d.BaseObject(c4d.Onull)
-            ctrl.SetName(j.GetName().replace("_FK", "_FKCtrl"))
-            ctrl[c4d.NULLOBJECT_DISPLAY] = c4d.NULLOBJECT_DISPLAY_SPHERE
-            ctrl[c4d.NULLOBJECT_RADIUS]  = radius
+        axis = axis_from_name(j.GetName())
+        ctrl = c4d.BaseObject(c4d.Onull)
+        ctrl.SetName(j.GetName().replace("_FK", "_FKCtrl"))
+        ctrl[c4d.NULLOBJECT_DISPLAY] = c4d.NULLOBJECT_DISPLAY_SPHERE
+        ctrl[c4d.NULLOBJECT_RADIUS]  = radius if j is not fk_root else radius/2
 
-            if axis == "x":
-                ctrl.SetRelRot(c4d.Vector(0, utils.DegToRad(90), 0))
-            elif axis == "y":
-                ctrl.SetRelRot(c4d.Vector(utils.DegToRad(90), 0, 0))
+        if axis == "x":
+            ctrl.SetRelRot(c4d.Vector(0, utils.DegToRad(90), 0))
+        elif axis == "y":
+            ctrl.SetRelRot(c4d.Vector(utils.DegToRad(90), 0, 0))
 
-            ctrl[c4d.ID_BASEOBJECT_USECOLOR] = 2
-            ctrl[c4d.ID_BASEOBJECT_COLOR]    = c4d.Vector(.3, .3, 1)
+        ctrl[c4d.ID_BASEOBJECT_USECOLOR] = 2
+        ctrl[c4d.ID_BASEOBJECT_COLOR]    = c4d.Vector(.3, .3, 1)
 
-            offset = c4d.BaseObject(c4d.Onull)
-            offset.SetName(f"{ctrl.GetName()}_offset")
-            offset.SetMg(j.GetMg()) 
-            ctrl.InsertUnder(offset)
-            doc.InsertObject(offset)
+        offset = c4d.BaseObject(c4d.Onull)
+        offset.SetName(f"{ctrl.GetName()}_offset")
+        offset.SetMg(j.GetMg()) 
+        ctrl.InsertUnder(offset)
+        doc.InsertObject(offset)
 
-            ctrl_data[j] = {"ctrl": ctrl, "offset": offset}
-            base_name = j.GetName().removesuffix("_FK")
-            ctrl_map[base_name] = ctrl
-            if top_offset is None:
-                top_offset = offset
+        ctrl_data[j] = {"ctrl": ctrl, "offset": offset}
+        base_name = j.GetName().removesuffix("_FK")
+        ctrl_map[base_name] = ctrl
+        if top_offset is None:
+            top_offset = offset
 
-            ctag = c4d.BaseTag(c4d.Tcaconstraint)
-            j.InsertTag(ctag)
+        ctag = c4d.BaseTag(c4d.Tcaconstraint)
+        j.InsertTag(ctag)
 
-            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR]   = True
-            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_P] = False
-            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_S] = False
-            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_R] = True
+        ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR]   = True
+        ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_P] = False
+        ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_S] = False
+        ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_R] = True
 
-            for ax in ("X", "Y", "Z"):
-                ctag[getattr(c4d, f"ID_CA_CONSTRAINT_TAG_PSR_CONSTRAIN_R_{ax}")] = True
+        for ax in ("X", "Y", "Z"):
+            ctag[getattr(c4d, f"ID_CA_CONSTRAINT_TAG_PSR_CONSTRAIN_R_{ax}")] = True
 
-            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_MAINTAIN] = True
-            ctag[10001] = ctrl
-            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_WEIGHT] = 1.0
+        ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_MAINTAIN] = True
+        ctag[10001] = ctrl
+        ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_WEIGHT] = 1.0
 
     for joint, data in ctrl_data.items():
         parent_joint = joint.GetUp()
@@ -1387,6 +1387,10 @@ class AnymToolDialog(gui.GeDialog):
                 setup_fkik_switch(out, new_root)
                 master_control = create_master_control(out)
                 master_control.InsertUnder(new_root)
+            else:
+                mg = new_root.GetMg()
+                mg *= utils.MatrixRotX(utils.DegToRad(-90))
+                new_root.SetMg(mg)
 
             c4d.EventAdd()
             return True
