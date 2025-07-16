@@ -478,24 +478,17 @@ def get_armature_data(root_c4d_object, scale=100):
 
                 master_ctrl = root_c4d_object.GetUp().GetUp()
                 current_c4d_hpb_rad = master_ctrl.GetAbsRot()
-                reconstructed_bvh_rot_matrix = c4d.utils.HPBToMatrix(current_c4d_hpb_rad, c4d.ROTATIONORDER_HPB)
-                raw_theta_y_rad = math.asin(-reconstructed_bvh_rot_matrix.v1.z)
-                raw_phi_x_rad = math.atan2(reconstructed_bvh_rot_matrix.v2.z, reconstructed_bvh_rot_matrix.v3.z)
-                raw_psi_z_rad = math.atan2(reconstructed_bvh_rot_matrix.v1.y, reconstructed_bvh_rot_matrix.v1.x)
-                cos_raw_theta_y = math.cos(raw_theta_y_rad)
-                if abs(cos_raw_theta_y) < 1e-6:
-                    raw_phi_x_rad = math.atan2(reconstructed_bvh_rot_matrix.v2.y, reconstructed_bvh_rot_matrix.v1.y)
-                    raw_psi_z_rad = 0.0
-                rot_x_deg_master = 0 #c4d.utils.RadToDeg(-raw_theta_y_rad)
-                rot_y_deg_master = 0 #c4d.utils.RadToDeg(-raw_phi_x_rad) - 90
-                rot_z_deg_master = c4d.utils.RadToDeg(raw_psi_z_rad)
+                
+                rot_x_deg_master = c4d.utils.RadToDeg(current_c4d_hpb_rad.z)
+                rot_y_deg_master = c4d.utils.RadToDeg(current_c4d_hpb_rad.y)
+                rot_z_deg_master = c4d.utils.RadToDeg(current_c4d_hpb_rad.x)
 
                 main_obj = root_c4d_object.GetUp().GetUp().GetUp()
                 current_c4d_hpb_rad = main_obj.GetAbsRot()
 
-                rot_x_deg_main = c4d.utils.RadToDeg(current_c4d_hpb_rad.x)
-                rot_y_deg_main = c4d.utils.RadToDeg(current_c4d_hpb_rad.y) + 90
-                rot_z_deg_main = c4d.utils.RadToDeg(-current_c4d_hpb_rad.z)
+                rot_x_deg_main = c4d.utils.RadToDeg(current_c4d_hpb_rad.z)
+                rot_y_deg_main = c4d.utils.RadToDeg(current_c4d_hpb_rad.y)
+                rot_z_deg_main = c4d.utils.RadToDeg(-current_c4d_hpb_rad.x)
 
                 rot_x_deg += rot_x_deg_master + rot_x_deg_main
                 rot_y_deg += rot_y_deg_master + rot_y_deg_main
@@ -574,6 +567,9 @@ def create_fkik_skeletons(main_group):
         ik_grp.InsertUnder(rig_grp)
         fk_grp.InsertUnder(rig_grp)
         bind_root.InsertUnder(rig_grp)
+        mg = rig_grp.GetMg()
+        mg *= utils.MatrixRotX(utils.DegToRad(-90))
+        rig_grp.SetMg(mg)
         rig_grp.InsertUnder(main_group) 
 
         for chain_root in (bind_root, ik_root, fk_root):
@@ -1095,10 +1091,8 @@ def create_master_control(rig_data):
         doc.InsertObject(control)
         doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, control)
         
-        rig_matrix = rig_group.GetMg()
         rig_group.Remove()
         rig_group.InsertUnder(control)
-        rig_group.SetMg(rig_matrix)
         
         doc.EndUndo()
         c4d.EventAdd()
@@ -1376,10 +1370,6 @@ class AnymToolDialog(gui.GeDialog):
                 i += 1
 
             new_root = import_bvh_single_frame(pose_line, name=name)
-
-            mg = new_root.GetMg()
-            mg *= utils.MatrixRotX(utils.DegToRad(-90))
-            new_root.SetMg(mg)
             
             if fkik_enabled:
                 out = create_fkik_skeletons(new_root)
@@ -1397,11 +1387,6 @@ class AnymToolDialog(gui.GeDialog):
                 setup_fkik_switch(out, new_root)
                 master_control = create_master_control(out)
                 master_control.InsertUnder(new_root)
-                
-                mg = master_control.GetMg()
-                mg *= utils.MatrixRotX(utils.DegToRad(90))
-                master_control.SetMg(mg)
-
 
             c4d.EventAdd()
             return True
