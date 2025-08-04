@@ -51,23 +51,23 @@ IDC_POSE_FRAME_FIELD_BASE= 26000
 
 HEADER = """
 HIERARCHY
-ROOT AnymHips
+ROOT Hips
 {
     OFFSET 0.000000 0.000000 0.000000
     CHANNELS 6 Xposition Yposition Zposition Zrotation Yrotation Xrotation
-    JOINT AnymLeftHip
+    JOINT LeftHip
     {
         OFFSET 0.080781 0.005359 -0.054022
         CHANNELS 3 Zrotation Yrotation Xrotation
-        JOINT AnymLeftKnee
+        JOINT LeftKnee
         {
             OFFSET 0.000000 -0.010000 -0.417793
             CHANNELS 3 Zrotation Yrotation Xrotation
-            JOINT AnymLeftFoot
+            JOINT LeftFoot
             {
                 OFFSET 0.000000 0.000000 -0.401472
                 CHANNELS 3 Zrotation Yrotation Xrotation
-                JOINT AnymLeftToe
+                JOINT LeftToe
                 {
                     OFFSET 0.011334 -0.104165 -0.041164
                     CHANNELS 3 Zrotation Yrotation Xrotation
@@ -79,19 +79,19 @@ ROOT AnymHips
             }
         }
     }
-    JOINT AnymRightHip
+    JOINT RightHip
     {
         OFFSET -0.080781 0.005359 -0.054025
         CHANNELS 3 Zrotation Yrotation Xrotation
-        JOINT AnymRightKnee
+        JOINT RightKnee
         {
             OFFSET 0.000000 -0.010000 -0.417793
             CHANNELS 3 Zrotation Yrotation Xrotation
-            JOINT AnymRightFoot
+            JOINT RightFoot
             {
                 OFFSET 0.000000 0.000000 -0.401472
                 CHANNELS 3 Zrotation Yrotation Xrotation
-                JOINT AnymRightToe
+                JOINT RightToe
                 {
                     OFFSET  -0.011334 -0.104165 -0.041168
                     CHANNELS 3 Zrotation Yrotation Xrotation
@@ -103,23 +103,23 @@ ROOT AnymHips
             }
         }
     }
-    JOINT AnymSpine
+    JOINT Spine
     {
         OFFSET 0.000000 0.011802 0.097172
         CHANNELS 3 Zrotation Yrotation Xrotation
-        JOINT AnymSpine1
+        JOINT Spine1
         {
             OFFSET 0.000000 0.013769 0.113368
             CHANNELS 3 Zrotation Yrotation Xrotation
-            JOINT AnymSpine2
+            JOINT Spine2
             {
                 OFFSET 0.000000 0.015737 0.129563
                 CHANNELS 3 Zrotation Yrotation Xrotation
-                JOINT AnymNeck
+                JOINT Neck
                 {
                     OFFSET 0.000000 0.017704 0.145760
                     CHANNELS 3 Zrotation Yrotation Xrotation
-                    JOINT AnymHead
+                    JOINT Head
                     {
                         OFFSET  0.000000 -0.019722 0.067202
                         CHANNELS 3 Zrotation Yrotation Xrotation
@@ -129,19 +129,19 @@ ROOT AnymHips
                         }
                     }
                 }
-                JOINT AnymLeftShoulder
+                JOINT LeftShoulder
                 {
                     OFFSET 0.061401 0.017995 0.098779
                     CHANNELS 3 Zrotation Yrotation Xrotation
-                    JOINT AnymLeftArm
+                    JOINT LeftArm
                     {
                         OFFSET 0.115589 0.000581 0.000000
                         CHANNELS 3 Zrotation Yrotation Xrotation
-                        JOINT AnymLeftForearm
+                        JOINT LeftForearm
                         {
                             OFFSET 0.255608 0.010000 0.000000
                             CHANNELS 3 Zrotation Yrotation Xrotation
-                            JOINT AnymLeftHand
+                            JOINT LeftHand
                             {
                                 OFFSET 0.234041 -0.010000 0.00000
                                 CHANNELS 3 Zrotation Yrotation Xrotation
@@ -153,19 +153,19 @@ ROOT AnymHips
                         }
                     }
                 }
-                JOINT AnymRightShoulder
+                JOINT RightShoulder
                 {
                     OFFSET -0.061401 0.017414 0.098778
                     CHANNELS 3 Zrotation Yrotation Xrotation
-                    JOINT AnymRightArm
+                    JOINT RightArm
                     {
                         OFFSET -0.115589 -0.000581 0.000000
                         CHANNELS 3 Zrotation Yrotation Xrotation
-                        JOINT AnymRightForearm
+                        JOINT RightForearm
                         {
                             OFFSET -0.255711 0.010000 0.000000
                             CHANNELS 3 Zrotation Yrotation Xrotation
-                            JOINT AnymRightHand
+                            JOINT RightHand
                             {
                                 OFFSET -0.234017 -0.010000 0.000000
                                 CHANNELS 3 Zrotation Yrotation Xrotation
@@ -198,12 +198,12 @@ ANYM_POSES = {
 }
 
 BVH_JOINT_ORDER = [
-    "AnymHips",
-    "AnymLeftHip", "AnymLeftKnee", "AnymLeftFoot", "AnymLeftToe",
-    "AnymRightHip", "AnymRightKnee", "AnymRightFoot", "AnymRightToe",
-    "AnymSpine", "AnymSpine1", "AnymSpine2", "AnymNeck", "AnymHead",
-    "AnymLeftShoulder", "AnymLeftArm", "AnymLeftForearm", "AnymLeftHand",
-    "AnymRightShoulder", "AnymRightArm", "AnymRightForearm", "AnymRightHand"
+    "Hips",
+    "LeftHip", "LeftKnee", "LeftFoot", "LeftToe",
+    "RightHip", "RightKnee", "RightFoot", "RightToe",
+    "Spine", "Spine1", "Spine2", "Neck", "Head",
+    "LeftShoulder", "LeftArm", "LeftForearm", "LeftHand",
+    "RightShoulder", "RightArm", "RightForearm", "RightHand"
 ]
 
 
@@ -346,16 +346,6 @@ def parse_bvh_data(lines, scale=100):
     return root_bvh_joint, all_bvh_joints, ordered_channels_for_motion, frame_values
 
 def import_bvh_single_frame(motion_string, name, scale=100):
-    """
-    Imports a single-frame BVH file content into the active Cinema 4D document.
-    It creates the joint hierarchy and applies the root position and joint rotations.
-
-    Args:
-        bvh_content_string (str): A string containing the full content of the .bvh file.
-
-    Returns:
-        bool: True if the import was successful, False otherwise.
-    """
     doc = c4d.documents.GetActiveDocument()
     bvh_content_string = HEADER + motion_string
 
@@ -376,7 +366,6 @@ def import_bvh_single_frame(motion_string, name, scale=100):
         bvh_joint_data.c4d_object = c4d_obj
 
     def build_c4d_hierarchy_recursive(bvh_joint_data, parent_c4d_obj):
-        """Recursively builds the Cinema 4D object hierarchy."""
         c4d_obj = bvh_joint_data.c4d_object
         if c4d_obj:
             if parent_c4d_obj:
@@ -600,19 +589,20 @@ def create_fkik_skeletons(main_group):
 def axis_from_name(name: str) -> str:
     name = name.lower()
     if any(k in name for k in ("spine", "neck", "head", "hip", "knee")):
-        return "z" 
+        return c4d.PRIM_PLANE_XY
     if any(k in name for k in ("foot", "toe")):
-        return "y" 
-    return "x" 
+        return c4d.PRIM_PLANE_XZ
+    return c4d.PRIM_PLANE_ZY
 
 def create_fk_controls(
         doc: c4d.documents.BaseDocument,
         fk_root: c4d.BaseObject,
-        radius: float = 5.0
+        radius: float = 5.0,
+        grp_name_suffix="FK_Controls_Grp"
     ) -> tuple[c4d.BaseObject|None, dict[str, c4d.BaseObject]]:
     
     ctrl_data: dict[c4d.BaseObject, dict[str, c4d.BaseObject]] = {}
-    ctrl_map : dict[str,          c4d.BaseObject]             = {}
+    ctrl_map : dict[str,            c4d.BaseObject]             = {}
     top_offset: c4d.BaseObject|None = None
 
     todo = [fk_root]
@@ -626,19 +616,24 @@ def create_fk_controls(
             continue
 
         axis = axis_from_name(j.GetName())
-        ctrl = c4d.BaseObject(c4d.Onull)
-        ctrl.SetName(j.GetName().replace("_FK", "_FKCtrl"))
-        ctrl[c4d.NULLOBJECT_DISPLAY] = c4d.NULLOBJECT_DISPLAY_SPHERE
-        ctrl[c4d.NULLOBJECT_RADIUS]  = radius if j is not fk_root else radius/2
-
-        if axis == "x":
-            ctrl.SetRelRot(c4d.Vector(0, utils.DegToRad(90), 0))
-        elif axis == "y":
-            ctrl.SetRelRot(c4d.Vector(utils.DegToRad(90), 0, 0))
-
+        ctrl = c4d.BaseObject(c4d.Osplinecircle)
+        ctrl[c4d.PRIM_PLANE] = axis
         ctrl[c4d.ID_BASEOBJECT_USECOLOR] = 2
-        ctrl[c4d.ID_BASEOBJECT_COLOR]    = c4d.Vector(.3, .3, 1)
+        prot_tag = c4d.BaseTag(c4d.Tprotection)
+        ctrl.InsertTag(prot_tag)
+        prot_tag[c4d.PROTECTION_R] = False
 
+        if j == fk_root:
+            prot_tag[c4d.PROTECTION_P] = False
+            ctrl.SetName('Hip_ctrl')
+            ctrl[c4d.PRIM_CIRCLE_RADIUS] = 15
+            ctrl[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(.1, 1., .1)
+
+        else:
+            ctrl.SetName(j.GetName().replace("_FK", "_FKCtrl"))
+            ctrl[c4d.PRIM_CIRCLE_RADIUS] = 5
+            ctrl[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(.3, .3, 1)
+        
         offset = c4d.BaseObject(c4d.Onull)
         offset.SetName(f"{ctrl.GetName()}_offset")
         offset.SetMg(j.GetMg()) 
@@ -666,6 +661,11 @@ def create_fk_controls(
         ctag[10001] = ctrl
         ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_WEIGHT] = 1.0
 
+    fk_grp = c4d.BaseObject(c4d.Onull)
+    fk_grp.SetName(f"{grp_name_suffix}")
+    fk_grp[c4d.NULLOBJECT_DISPLAY] = c4d.NULLOBJECT_DISPLAY_NONE
+    doc.InsertObject(fk_grp)
+
     for joint, data in ctrl_data.items():
         parent_joint = joint.GetUp()
         off = data["offset"]
@@ -673,17 +673,16 @@ def create_fk_controls(
         if parent_joint in ctrl_data:
             off.InsertUnder(ctrl_data[parent_joint]["ctrl"])
         else:
-            off.InsertUnder(fk_root.GetUp())
+            off.InsertUnder(fk_grp)
         off.SetMg(world_mg)
 
     c4d.EventAdd()
-    return top_offset, ctrl_map
-
+    return fk_grp, ctrl_map
+    
 def _add_fk_driver_to_ik_joint(
         joint: c4d.BaseObject,
         fk_ctrl: c4d.BaseObject
     ) -> c4d.BaseTag:
-    """Adds a rotation-only PSR constraint that follows *fk_ctrl*."""
     tag = c4d.BaseTag(c4d.Tcaconstraint)
     joint.InsertTag(tag)
 
@@ -742,17 +741,43 @@ def pole_vector_position(start, mid, end):
     
     return pole_vec_pos
 
+def _add_rotation_constraint(
+        joint: c4d.BaseObject,
+        target: c4d.BaseObject
+    ) -> c4d.BaseTag:
+    tag = c4d.BaseTag(c4d.Tcaconstraint)
+    joint.InsertTag(tag)
+
+    tag[c4d.ID_CA_CONSTRAINT_TAG_PSR]   = True
+    tag[c4d.ID_CA_CONSTRAINT_TAG_PSR_P] = False
+    tag[c4d.ID_CA_CONSTRAINT_TAG_PSR_S] = False
+    tag[c4d.ID_CA_CONSTRAINT_TAG_PSR_R] = True
+
+    for ax in ("X", "Y", "Z"):
+        tag[getattr(c4d, f"ID_CA_CONSTRAINT_TAG_PSR_CONSTRAIN_R_{ax}")] = True
+
+    tag[c4d.ID_CA_CONSTRAINT_TAG_PSR_MAINTAIN] = True
+    tag[10001] = target
+    tag[c4d.ID_CA_CONSTRAINT_TAG_PSR_WEIGHT] = 1.0
+    return tag
+
 def create_ik_for_limb(doc, root_j, mid_j, tip_j,
-                       label, ctrl_radius=18.0):
+                        label, ctrl_radius=18.0):
 
     goal = c4d.BaseObject(c4d.Onull)
     goal.SetName(f"{label}_Goal")
     goal[c4d.NULLOBJECT_DISPLAY] = c4d.NULLOBJECT_DISPLAY_CUBE
     goal[c4d.NULLOBJECT_RADIUS]  = ctrl_radius * 1.
-    goal[c4d.ID_BASEOBJECT_USECOLOR] = 2 
+    goal[c4d.ID_BASEOBJECT_USECOLOR] = 2
     goal[c4d.ID_BASEOBJECT_COLOR]    = c4d.Vector(1, 0, 0)
+    prot_tag = c4d.BaseTag(c4d.Tprotection)
+    goal.InsertTag(prot_tag)
+    prot_tag[c4d.PROTECTION_R] = False
+    prot_tag[c4d.PROTECTION_P] = False
+    
     tip_mg = tip_j.GetMg()
-    goal.SetAbsPos(c4d.Vector(tip_mg.off[0],tip_mg.off[2],-tip_mg.off[1]))
+    goal.SetMg(tip_mg)
+
     doc.InsertObject(goal)
 
     pole = c4d.BaseObject(c4d.Onull)
@@ -761,16 +786,26 @@ def create_ik_for_limb(doc, root_j, mid_j, tip_j,
     pole[c4d.NULLOBJECT_RADIUS]  = ctrl_radius * .8
     pole[c4d.ID_BASEOBJECT_USECOLOR] = 2  
     pole[c4d.ID_BASEOBJECT_COLOR]    = c4d.Vector(1, 0, 0)
-    pole.SetAbsPos(pole_vector_position(root_j, mid_j, tip_j))
+    pole_pos = pole_vector_position(root_j, mid_j, tip_j)
+    pole.SetAbsPos(
+        c4d.Vector(
+            pole_pos[0],
+            -pole_pos[2],
+            pole_pos[1]
+        )
+    )
     doc.InsertObject(pole)
 
     ik_tag = c4d.BaseTag(c4d.Tcaik)
     root_j.InsertTag(ik_tag)
 
-    ik_tag[c4d.ID_CA_IK_TAG_TIP]    = tip_j
-    ik_tag[c4d.ID_CA_IK_TAG_TARGET] = goal
-    ik_tag[c4d.ID_CA_IK_TAG_POLE]   = pole
-    ik_tag[c4d.ID_CA_IK_TAG_SOLVER] = c4d.ID_CA_IK_TAG_SOLVER_2D
+    ik_tag[c4d.ID_CA_IK_TAG_TIP]     = tip_j
+    ik_tag[c4d.ID_CA_IK_TAG_TARGET]  = goal
+    ik_tag[c4d.ID_CA_IK_TAG_POLE]    = pole
+    ik_tag[c4d.ID_CA_IK_TAG_SOLVER]  = c4d.ID_CA_IK_TAG_SOLVER_2D
+    ik_tag[c4d.ID_CA_IK_TAG_DRAW_POLE] = False
+
+    _add_rotation_constraint(tip_j, goal)
 
     return goal, pole, ik_tag
 
@@ -780,13 +815,13 @@ def build_ik_systems(
         ik_map, 
         fk_ctrl_map,
         radius=8.0, 
-        grp_name_suffix="_IK_Controls_Grp"
+        grp_name_suffix="IK_Controls_Grp"
     ):
 
-    limbs = [("AnymLeftArm",   "AnymLeftForearm", "AnymLeftHand",  "AnymLeftArm",  True),
-         ("AnymRightArm",  "AnymRightForearm","AnymRightHand", "AnymRightArm", True),
-         ("AnymLeftHip", "AnymLeftKnee",     "AnymLeftFoot",  "AnymLeftLeg",  False),
-         ("AnymRightHip","AnymRightKnee",    "AnymRightFoot", "AnymRightLeg", False)]
+    limbs = [("LeftArm",   "LeftForearm", "LeftHand",  "LeftArm",  True),
+         ("RightArm",  "RightForearm","RightHand", "RightArm", True),
+         ("LeftHip", "LeftKnee",     "LeftFoot",  "LeftLeg",  False),
+         ("RightHip","RightKnee",    "RightFoot", "RightLeg", False)]
     ctrls, tags = [], []
     for start, mid, end, label, skip in limbs:
         s, m, e = ik_map.get(start), ik_map.get(mid), ik_map.get(end)
@@ -941,7 +976,7 @@ def setup_fkik_switch_constraints(rig_data):
         doc.DoUndo(True)
         raise e
 
-def setup_fkik_switch(rig_data, new_root):
+def setup_fkik_switch(rig_data, new_root, ik_ctrl_grp, fk_ctrl_grp):
     doc = c4d.documents.GetActiveDocument()
     doc.StartUndo()
     
@@ -972,6 +1007,9 @@ def setup_fkik_switch(rig_data, new_root):
         set_priority(master_tag)
         master_tag.SetName("FK_IK_Master_Controller")
         doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, master_tag)
+
+        ik_grp_name = ik_ctrl_grp.GetName() if ik_ctrl_grp else ""
+        fk_grp_name = fk_ctrl_grp.GetName() if fk_ctrl_grp else ""
         
         joint_data = []
         
@@ -1023,6 +1061,16 @@ def main():
     
     mix = ctrl[c4d.ID_USERDATA, 1]
     
+    fk_grp = doc.SearchObject("{fk_grp_name}")
+    if fk_grp:
+        fk_grp[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
+        fk_grp[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+
+    ik_grp = doc.SearchObject("{ik_grp_name}")
+    if ik_grp:
+        ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix > 0.01 else 1
+        ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix > 0.01 else 1
+        
     for joint_info in joints:
         bind = FindChildByName(total_root, joint_info["bind_name"])
         fk = FindChildByName(total_root, joint_info["fk_name"])
@@ -1373,18 +1421,25 @@ class AnymToolDialog(gui.GeDialog):
             
             if fkik_enabled:
                 out = create_fkik_skeletons(new_root)
-                fk_offset_root, fk_ctrl_map = create_fk_controls(
+                fk_ctrl_grp, fk_ctrl_map = create_fk_controls(
                     doc=doc,
                     fk_root=out["fk_root"]
                 )
+                mg = fk_ctrl_grp.GetMg()
+                mg *= utils.MatrixRotX(utils.DegToRad(90))
+                fk_ctrl_grp.SetMg(mg)
+                fk_ctrl_grp.InsertUnder(out["groups"]["fk"])
                 ik_ctrl_grp = build_ik_systems(
                     doc=doc,
                     ik_root=out["ik_root"],
                     ik_map=out["ik_map"],
                     fk_ctrl_map=fk_ctrl_map
                 )
+                mg = ik_ctrl_grp.GetMg()
+                mg *= utils.MatrixRotX(utils.DegToRad(90))
+                ik_ctrl_grp.SetMg(mg)
                 ik_ctrl_grp.InsertUnder(out["groups"]["ik"])
-                setup_fkik_switch(out, new_root)
+                setup_fkik_switch(out, new_root, ik_ctrl_grp, fk_ctrl_grp)
                 master_control = create_master_control(out)
                 master_control.InsertUnder(new_root)
             else:
