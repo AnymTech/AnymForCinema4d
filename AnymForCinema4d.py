@@ -40,6 +40,7 @@ IDC_GENERATE_ANIMATION = 20010
 IDC_FETCH_ANIMATION = 20011
 IDC_API_KEY = 20012
 IDC_LOGO_BITMAP = 20013
+IDC_MODEL_CHECKBOX = 20014
 
 IDC_POSE_REMOVE_BASE     = 21000
 IDC_POSE_COMBO_BASE      = 22000
@@ -206,6 +207,17 @@ BVH_JOINT_ORDER = [
     "RightShoulder", "RightArm", "RightForearm", "RightHand"
 ]
 
+
+def FindChildByName(parent, name):
+    obj = parent.GetDown()
+    while obj:
+        if obj.GetName() == name:
+            return obj
+        found = FindChildByName(obj, name)
+        if found:
+            return found
+        obj = obj.GetNext()
+    return None
 
 class BVHJointData:
     def __init__(self, name, parent_data=None, is_end_site=False):
@@ -588,9 +600,9 @@ def create_fkik_skeletons(main_group):
 
 def axis_from_name(name: str) -> str:
     name = name.lower()
-    if any(k in name for k in ("spine", "neck", "head", "hip", "knee")):
+    if any(k in name for k in ("spine", "neck", "head", "hip", "knee", "foot")):
         return c4d.PRIM_PLANE_XY
-    if any(k in name for k in ("foot", "toe")):
+    if any(k in name for k in ("toe",)):
         return c4d.PRIM_PLANE_XZ
     return c4d.PRIM_PLANE_ZY
 
@@ -598,8 +610,29 @@ def create_fk_controls(
         doc: c4d.documents.BaseDocument,
         fk_root: c4d.BaseObject,
         radius: float = 5.0,
-        grp_name_suffix="FK_Controls_Grp"
+        grp_name_suffix: str = "FK_Controls_Grp",
+        model_import_enabled: bool = False
     ) -> tuple[c4d.BaseObject|None, dict[str, c4d.BaseObject]]:
+
+    radii = {
+        'LeftHip_FK': 12,
+        'RightHip_FK': 12, 
+        'LeftKnee_FK': 8,
+        'RightKnee_FK': 8,
+        'LeftFoot_FK': 8,
+        'RightFoot_FK': 8,
+        'LeftToe_FK': 4,
+        'RightToe_FK': 4,
+        'Spine_FK': 16,
+        'Spine1_FK': 18,
+        'Spine2_FK': 20,
+        'Neck_FK': 15,
+        'Head_FK': 15,
+        'LeftShoulder_FK': 12,
+        'RightShoulder_FK': 12,
+        'LeftArm_FK': 9,
+        'RightArm_FK': 9,
+    }
     
     ctrl_data: dict[c4d.BaseObject, dict[str, c4d.BaseObject]] = {}
     ctrl_map : dict[str,            c4d.BaseObject]             = {}
@@ -608,14 +641,15 @@ def create_fk_controls(
     todo = [fk_root]
     while todo:
         j = todo.pop()
+        j_name = j.GetName()
         todo.extend(reversed(j.GetChildren()))
 
         if not j.CheckType(c4d.Ojoint):
             continue
-        if "site" in j.GetName().lower():
+        if "site" in j_name.lower():
             continue
 
-        axis = axis_from_name(j.GetName())
+        axis = axis_from_name(j_name)
         prot_tag = c4d.BaseTag(c4d.Tprotection)
         prot_tag[c4d.PROTECTION_R] = False
 
@@ -623,14 +657,17 @@ def create_fk_controls(
             ctrl = c4d.BaseObject(c4d.Osplinenside)
             prot_tag[c4d.PROTECTION_P] = False
             ctrl.SetName('Hip_ctrl')
-            ctrl[c4d.PRIM_NSIDE_RADIUS] = 15
+            ctrl[c4d.PRIM_NSIDE_RADIUS] = 20 if model_import_enabled else 15
             ctrl[c4d.PRIM_NSIDE_SIDES] = 6
             ctrl[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(.1, 1., .1)
 
         else:
             ctrl = c4d.BaseObject(c4d.Osplinecircle)
-            ctrl.SetName(j.GetName().replace("_FK", "_FKCtrl"))
-            ctrl[c4d.PRIM_CIRCLE_RADIUS] = 5
+            ctrl.SetName(j_name.replace("_FK", "_FKCtrl"))
+            if not model_import_enabled:
+                ctrl[c4d.PRIM_CIRCLE_RADIUS] = 5
+            else: 
+                ctrl[c4d.PRIM_CIRCLE_RADIUS] = radii.get(j_name, 6)
             ctrl[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(.3, .3, 1)
         
         ctrl.InsertTag(prot_tag)
@@ -916,136 +953,7 @@ def build_ik_systems(
     c4d.EventAdd()
     return grp
 
-def setup_fkik_switch_constraints(rig_data):
-    doc = c4d.documents.GetActiveDocument()
-    doc.StartUndo()
-    
-    try:
-        control_null = c4d.BaseObject(c4d.Onull)
-        control_null.SetName("CTRL_FK_IK_Switch")
-        control_null[c4d.NULLOBJECT_DISPLAY] = 2
-        control_null[c4d.NULLOBJECT_RADIUS] = 50
-        control_null[c4d.ID_BASEOBJECT_USECOLOR] = 2
-        control_null[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(1, 1, 0)
-        
-        bc = c4d.GetCustomDatatypeDefault(c4d.DTYPE_REAL)
-        bc[c4d.DESC_NAME] = "FK/IK Mix"
-        bc[c4d.DESC_MIN] = 0.0
-        bc[c4d.DESC_MAX] = 100.0
-        bc[c4d.DESC_CUSTOMGUI] = c4d.CUSTOMGUI_REALSLIDER
-        bc[c4d.DESC_UNIT] = c4d.DESC_UNIT_PERCENT
-        bc[c4d.DESC_STEP] = 1.0
-        bc[c4d.DESC_DEFAULT] = 0.0
-        
-        mix_element = control_null.AddUserData(bc)
-        control_null[mix_element] = 0.0 
-        
-        control_null.InsertUnder(rig_data["groups"]["rig"])
-        doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, control_null)
-        
-        constraints = []
-        
-        def setup_joint_constraints(bind_joint):
-            
-            if 'Site' in bind_joint.GetName():
-                return
-            
-            fk_joint = rig_data["fk_map"].get(bind_joint.GetName())
-            ik_joint = rig_data["ik_map"].get(bind_joint.GetName())
-            
-            if not fk_joint or not ik_joint:
-                return
-            
-            fk_constraint = bind_joint.MakeTag(c4d.Tconstraint)
-            set_priority(fk_constraint)
-            if fk_constraint:
-                fk_constraint.SetName(f"FK_Constraint_{bind_joint.GetName()}")
-                doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, fk_constraint)
-                
-                fk_constraint[c4d.ID_CA_CONSTRAINT_TAG_PSR] = True
-                fk_constraint[10001] = fk_joint 
-                
-                fk_xpresso = fk_constraint.MakeTag(c4d.Texpresso)
-                fk_xpresso.SetName("FK_Weight")
-                doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, fk_xpresso)
-                
-                master = fk_xpresso.GetNodeMaster()
-                root = master.GetRoot()
-                
-                ctrl_node = master.CreateNode(root, c4d.ID_OPERATOR_OBJECT)
-                ctrl_node[c4d.GV_OBJECT_OBJECT_ID] = control_null
-                ctrl_port = ctrl_node.AddPort(c4d.GV_PORT_OUTPUT, mix_element)
-                
-                math_node = master.CreateNode(root, c4d.ID_OPERATOR_MATH)
-                math_node[c4d.GV_MATH_FUNCTION_ID] = c4d.GV_MATH_SUB 
-                math_node.GetInPort(0).SetFloat(100.0)
-                
-                const_node = master.CreateNode(root, c4d.ID_OPERATOR_OBJECT)
-                const_node[c4d.GV_OBJECT_OBJECT_ID] = fk_constraint
-                weight_port = const_node.AddPort(c4d.GV_PORT_INPUT,
-                    c4d.DescID(c4d.DescLevel(c4d.ID_CA_CONSTRAINT_TAG_PSR_CONS, 0, 0),
-                               c4d.DescLevel(10006, 0, 0))) 
-                
-                master.CreateConnection(ctrl_node, ctrl_port,
-                                        math_node, math_node.GetInPort(1))
-                master.CreateConnection(math_node, math_node.GetOutPort(0),
-                                        const_node, weight_port)
-                
-                constraints.append(fk_constraint)
-            
-            ik_constraint = bind_joint.MakeTag(c4d.Tconstraint)
-            set_priority(ik_constraint)
-            if ik_constraint:
-                ik_constraint.SetName(f"IK_Constraint_{bind_joint.GetName()}")
-                doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, ik_constraint)
-                
-                ik_constraint[c4d.ID_CA_CONSTRAINT_TAG_PSR] = True
-                ik_constraint[10001] = ik_joint
-
-                ik_xpresso = ik_constraint.MakeTag(c4d.Texpresso)
-                ik_xpresso.SetName("IK_Weight")
-                doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, ik_xpresso)
-                
-                master = ik_xpresso.GetNodeMaster()
-                root = master.GetRoot()
-                
-                ctrl_node = master.CreateNode(root, c4d.ID_OPERATOR_OBJECT)
-                ctrl_node[c4d.GV_OBJECT_OBJECT_ID] = control_null
-                ctrl_port = ctrl_node.AddPort(c4d.GV_PORT_OUTPUT, mix_element)
-                
-                const_node = master.CreateNode(root, c4d.ID_OPERATOR_OBJECT)
-                const_node[c4d.GV_OBJECT_OBJECT_ID] = ik_constraint
-                weight_port = const_node.AddPort(c4d.GV_PORT_INPUT,
-                    c4d.DescID(c4d.DescLevel(c4d.ID_CA_CONSTRAINT_TAG_PSR_CONS, 0, 0),
-                               c4d.DescLevel(10006, 0, 0))) 
-                
-                master.CreateConnection(ctrl_node, ctrl_port,
-                                        const_node, weight_port)
-                
-                constraints.append(ik_constraint)
-            
-            child = bind_joint.GetDown()
-            while child:
-                setup_joint_constraints(child)
-                child = child.GetNext()
-        
-        setup_joint_constraints(rig_data["bind_root"])
-        
-        doc.EndUndo()
-        c4d.EventAdd()
-        
-        return {
-            "control_null": control_null,
-            "constraints": constraints,
-            "mix_element": mix_element
-        }
-        
-    except Exception as e:
-        doc.EndUndo()
-        doc.DoUndo(True)
-        raise e
-
-def setup_fkik_switch(rig_data, new_root, ik_ctrl_grp, fk_ctrl_grp):
+def setup_fkik_switch(rig_data, new_root, ik_ctrl_grp, fk_ctrl_grp, model_import_enabled):
     doc = c4d.documents.GetActiveDocument()
     doc.StartUndo()
     
@@ -1112,6 +1020,18 @@ def setup_fkik_switch(rig_data, new_root, ik_ctrl_grp, fk_ctrl_grp):
         
         python_code = f'''import c4d
 from c4d import utils
+import math
+
+def normalize_angle(angle):
+    while angle > math.pi:
+        angle -= 2 * math.pi
+    while angle < -math.pi:
+        angle += 2 * math.pi
+    return angle
+
+def blend_angles(a1, a2, mix):
+    diff = normalize_angle(a2 - a1)
+    return a1 + diff * mix
 
 def main():
     def FindChildByName(parent, name):
@@ -1128,6 +1048,7 @@ def main():
     joints = {joint_list_str}
     doc = c4d.documents.GetActiveDocument()
     total_root = doc.SearchObject('{new_root.GetName()}')
+    hide_armatures = {model_import_enabled}
     
     ctrl = op.GetObject()
     if not ctrl:
@@ -1135,32 +1056,49 @@ def main():
     
     mix = ctrl[c4d.ID_USERDATA, 1]
     
-    fk_grp = total_root.GetDown().GetDown().GetDown().GetNext().GetNext()
-    if fk_grp:
-        armature_fk = fk_grp.GetDown().GetNext()
-        hip_off = fk_grp.GetDown().GetDown()
+    fk_grp = FindChildByName(total_root, 'Hips_FK_Skel_Grp')
 
-        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
-        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+    if fk_grp:
+        armature_fk = FindChildByName(fk_grp, 'Hips_FK')
+        hip_off = FindChildByName(fk_grp, 'Hip_ctrl_offset')
+
+        val = 0 if mix < 0.99 else 1
+
+        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
+        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
         spine_fk = hip_off.GetDown().GetDown()
-        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
-        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
+        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
         rhip_fk = spine_fk.GetNext()
-        rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
-        rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+        rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
+        rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
         lhip_fk = rhip_fk.GetNext()
-        lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
-        lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
-
+        lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
+        lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
     ik_grp = fk_grp.GetNext()
     if ik_grp:
-        ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix > 0.01 else 1
-        ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix > 0.01 else 1
+        val = 0 if mix > 0.01 else 1
+        ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
+        ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
         
+    if fk_grp and ik_grp and hide_armatures:
+        armature_ik = FindChildByName(ik_grp, 'Hips_IK')
+        armature_model = FindChildByName(total_root, 'Armature')
+        armature_base = FindChildByName(total_root, 'Hips')
+
+        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 1
+        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
+        armature_ik[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 1
+        armature_ik[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
+        armature_model[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 1
+        armature_model[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
+        #armature_base[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 1
+        #armature_base[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
+
     for joint_info in joints:
         bind = FindChildByName(total_root, joint_info["bind_name"])
         fk = FindChildByName(total_root, joint_info["fk_name"])
@@ -1176,7 +1114,13 @@ def main():
         
         fk_rot = utils.MatrixToHPB(fk_mg)
         ik_rot = utils.MatrixToHPB(ik_mg)
-        rot = fk_rot * (1.0 - mix) + ik_rot * mix
+        
+        # Blend each angle component using shortest path
+        h = blend_angles(fk_rot.x, ik_rot.x, mix)
+        p = blend_angles(fk_rot.y, ik_rot.y, mix)
+        b = blend_angles(fk_rot.z, ik_rot.z, mix)
+        
+        rot = c4d.Vector(h, p, b)
         
         mg = utils.HPBToMatrix(rot)
         mg.off = pos
@@ -1311,7 +1255,72 @@ class AnymToolDialog(gui.GeDialog):
             if result == c4d.IMAGERESULT_OK:
                 return bitmap
         return None
-    
+
+    def import_and_constrain_model(self, root, fbx_filename='AnymModel.fbx'):
+        doc = documents.GetActiveDocument()
+        filepath = os.path.join(self.plugin_path, 'res', 'model', fbx_filename)
+        FLAGS = (c4d.SCENEFILTER_MERGESCENE
+            | c4d.SCENEFILTER_OBJECTS
+            | c4d.SCENEFILTER_MATERIALS)
+        success = c4d.documents.MergeDocument(doc, filepath, FLAGS)
+
+        target_armature = doc.SearchObject('Armature')
+        mg = target_armature.GetMg()
+        mg *= utils.MatrixRotZ(utils.DegToRad(90))
+        target_armature.SetMg(mg)
+        target_armature[c4d.ID_BASEOBJECT_ABS_SCALE] = c4d.Vector(.95, .95, .95)
+        target_mesh = doc.SearchObject('Ch36')
+
+        target_armature.InsertUnder(root)
+        target_mesh.InsertUnder(root)
+
+        bone_mapping = {
+            'Hips': 'mixamorig1:Hips',
+            'Spine': 'mixamorig1:Spine',
+            'Spine1': 'mixamorig1:Spine1',
+            'Spine2': 'mixamorig1:Spine2',
+            'Neck': 'mixamorig1:Neck',
+            'Head': 'mixamorig1:Head',
+            'LeftShoulder': 'mixamorig1:LeftShoulder',
+            'LeftArm': 'mixamorig1:LeftArm',
+            'LeftForearm': 'mixamorig1:LeftForeArm',
+            'LeftHand': 'mixamorig1:LeftHand',
+            'RightShoulder': 'mixamorig1:RightShoulder',
+            'RightArm': 'mixamorig1:RightArm',
+            'RightForearm': 'mixamorig1:RightForeArm',
+            'RightHand': 'mixamorig1:RightHand',
+            'LeftHip': 'mixamorig1:LeftUpLeg',
+            'LeftKnee': 'mixamorig1:LeftLeg',
+            'LeftFoot': 'mixamorig1:LeftFoot',
+            'LeftToe': 'mixamorig1:LeftToeBase',
+            'RightHip': 'mixamorig1:RightUpLeg',
+            'RightKnee': 'mixamorig1:RightLeg',
+            'RightFoot': 'mixamorig1:RightFoot',
+            'RightToe': 'mixamorig1:RightToeBase'
+        }
+
+        for source_bone_name, target_bone_name in bone_mapping.items():            
+            source_bone = FindChildByName(root, source_bone_name)
+            target_bone = FindChildByName(target_armature, target_bone_name)
+
+            constraint_tag = source_bone.MakeTag(c4d.Tcaconstraint)
+            
+            ctag = c4d.BaseTag(c4d.Tcaconstraint)
+            target_bone.InsertTag(ctag)
+
+            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR]   = True
+            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_P] = True if source_bone_name == 'Hips' else False
+            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_S] = False
+            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_R] = True
+
+            for ax in ("X", "Y", "Z"):
+                ctag[getattr(c4d, f"ID_CA_CONSTRAINT_TAG_PSR_CONSTRAIN_R_{ax}")] = True
+                ctag[getattr(c4d, f"ID_CA_CONSTRAINT_TAG_PSR_CONSTRAIN_P_{ax}")] = True if source_bone_name == 'Hips' else False
+
+            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_MAINTAIN] = True
+            ctag[10001] = source_bone
+            ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_WEIGHT] = 1.0
+
     def CreateLayout(self):
         self.SetTitle("ANYM v1.0")
         
@@ -1361,8 +1370,13 @@ class AnymToolDialog(gui.GeDialog):
 
                 self.GroupEnd()
                 
-                self.AddCheckbox(IDC_FKIK_CHECKBOX, c4d.BFH_LEFT, 0, 0, "Create FK/IK")
-                self.SetBool(IDC_FKIK_CHECKBOX, True)
+                if self.GroupBegin(2002, c4d.BFH_SCALEFIT, 2, 0):
+                    self.AddCheckbox(IDC_FKIK_CHECKBOX, c4d.BFH_LEFT, 0, 0, "Create FK/IK")
+                    self.SetBool(IDC_FKIK_CHECKBOX, True)
+                    self.AddCheckbox(IDC_MODEL_CHECKBOX, c4d.BFV_SCALEFIT, 0, 0, "Import Model")
+                    self.SetBool(IDC_MODEL_CHECKBOX, True)
+                
+                self.GroupEnd()
                 
                 self.AddButton(IDC_IMPORT_ARMATURE, c4d.BFH_SCALEFIT, 0, 15, "Import Armature")
                 
@@ -1496,6 +1510,7 @@ class AnymToolDialog(gui.GeDialog):
         selected_pose = self.GetInt32(IDC_POSE_DROPDOWN) - 1 
         if selected_pose != -1:
             fkik_enabled = self.GetBool(IDC_FKIK_CHECKBOX)
+            model_import_enabled = self.GetBool(IDC_MODEL_CHECKBOX)
             bvh_name = self.available_pose_files[selected_pose]
 
             pose_line = ANYM_POSES[bvh_name]
@@ -1513,7 +1528,8 @@ class AnymToolDialog(gui.GeDialog):
                 out = create_fkik_skeletons(new_root)
                 fk_ctrl_grp, fk_ctrl_map = create_fk_controls(
                     doc=doc,
-                    fk_root=out["fk_root"]
+                    fk_root=out["fk_root"],
+                    model_import_enabled=model_import_enabled
                 )
                 mg = fk_ctrl_grp.GetMg()
                 mg *= utils.MatrixRotX(utils.DegToRad(90))
@@ -1529,13 +1545,16 @@ class AnymToolDialog(gui.GeDialog):
                 mg *= utils.MatrixRotX(utils.DegToRad(90))
                 ik_ctrl_grp.SetMg(mg)
                 ik_ctrl_grp.InsertUnder(out["groups"]["ik"])
-                setup_fkik_switch(out, new_root, ik_ctrl_grp, fk_ctrl_grp)
+                setup_fkik_switch(out, new_root, ik_ctrl_grp, fk_ctrl_grp, model_import_enabled)
                 master_control = create_master_control(out)
                 master_control.InsertUnder(new_root)
             else:
                 mg = new_root.GetMg()
                 mg *= utils.MatrixRotX(utils.DegToRad(-90))
                 new_root.SetMg(mg)
+
+            if model_import_enabled:
+                self.import_and_constrain_model(new_root)
 
             c4d.EventAdd()
             return True
