@@ -616,23 +616,26 @@ def create_fk_controls(
             continue
 
         axis = axis_from_name(j.GetName())
-        ctrl = c4d.BaseObject(c4d.Osplinecircle)
-        ctrl[c4d.PRIM_PLANE] = axis
-        ctrl[c4d.ID_BASEOBJECT_USECOLOR] = 2
         prot_tag = c4d.BaseTag(c4d.Tprotection)
-        ctrl.InsertTag(prot_tag)
         prot_tag[c4d.PROTECTION_R] = False
 
         if j == fk_root:
+            ctrl = c4d.BaseObject(c4d.Osplinenside)
             prot_tag[c4d.PROTECTION_P] = False
             ctrl.SetName('Hip_ctrl')
-            ctrl[c4d.PRIM_CIRCLE_RADIUS] = 15
+            ctrl[c4d.PRIM_NSIDE_RADIUS] = 15
+            ctrl[c4d.PRIM_NSIDE_SIDES] = 6
             ctrl[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(.1, 1., .1)
 
         else:
+            ctrl = c4d.BaseObject(c4d.Osplinecircle)
             ctrl.SetName(j.GetName().replace("_FK", "_FKCtrl"))
             ctrl[c4d.PRIM_CIRCLE_RADIUS] = 5
             ctrl[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(.3, .3, 1)
+        
+        ctrl.InsertTag(prot_tag)
+        ctrl[c4d.PRIM_PLANE] = axis
+        ctrl[c4d.ID_BASEOBJECT_USECOLOR] = 2
         
         offset = c4d.BaseObject(c4d.Onull)
         offset.SetName(f"{ctrl.GetName()}_offset")
@@ -761,15 +764,78 @@ def _add_rotation_constraint(
     tag[c4d.ID_CA_CONSTRAINT_TAG_PSR_WEIGHT] = 1.0
     return tag
 
-def create_ik_for_limb(doc, root_j, mid_j, tip_j,
-                        label, ctrl_radius=18.0):
-
-    goal = c4d.BaseObject(c4d.Onull)
-    goal.SetName(f"{label}_Goal")
-    goal[c4d.NULLOBJECT_DISPLAY] = c4d.NULLOBJECT_DISPLAY_CUBE
-    goal[c4d.NULLOBJECT_RADIUS]  = ctrl_radius * 1.
+def create_ik_for_limb(doc, root_j, mid_j, tip_j, label, ctrl_radius=18.0):
+    goal = c4d.BaseObject(c4d.Ospline)
     goal[c4d.ID_BASEOBJECT_USECOLOR] = 2
-    goal[c4d.ID_BASEOBJECT_COLOR]    = c4d.Vector(1, 0, 0)
+    goal.SetName(f"{label}_Goal")
+
+    if "foot" in tip_j.GetName().lower():
+        box_scale = ctrl_radius * .6
+        points = [
+            c4d.Vector(-box_scale, -box_scale, -box_scale),
+			c4d.Vector(-box_scale, box_scale, -box_scale),
+			c4d.Vector(-box_scale, box_scale, box_scale),
+			c4d.Vector(-box_scale, -5*box_scale, box_scale),
+			c4d.Vector(-box_scale, -box_scale, -box_scale),
+			c4d.Vector(box_scale, -box_scale, -box_scale),
+			c4d.Vector(box_scale, box_scale, -box_scale),
+			c4d.Vector(-box_scale, box_scale, -box_scale),
+			c4d.Vector(box_scale, box_scale, -box_scale),
+			c4d.Vector(box_scale, box_scale, box_scale),
+			c4d.Vector(-box_scale, box_scale, box_scale),
+			c4d.Vector(box_scale, box_scale, box_scale),
+			c4d.Vector(box_scale, -5*box_scale, box_scale),
+			c4d.Vector(-box_scale, -5*box_scale, box_scale),
+			c4d.Vector(box_scale, -5*box_scale, box_scale),
+			c4d.Vector(box_scale, -box_scale, -box_scale),
+        ]
+    elif "l" in tip_j.GetName().lower():
+        box_scale = ctrl_radius * 1.
+        points = [
+            c4d.Vector(-box_scale, -box_scale, -.5*box_scale),
+			c4d.Vector(-box_scale, box_scale, -.5*box_scale),
+			c4d.Vector(-box_scale, box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, -box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, -box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, -.5*box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, .5*box_scale, -.5*box_scale),
+			c4d.Vector(-box_scale, box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, .5*box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, .5*box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, box_scale, .5*box_scale),
+			c4d.Vector(box_scale, .5*box_scale, .5*box_scale),
+			c4d.Vector(box_scale, -.5*box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, -box_scale, .5*box_scale),
+			c4d.Vector(box_scale, -.5*box_scale, .5*box_scale),
+			c4d.Vector(box_scale, -.5*box_scale, -.5*box_scale),
+        ]
+    else:
+        box_scale = ctrl_radius * 1.
+        points = [
+            c4d.Vector(-box_scale, -.5*box_scale, -.5*box_scale),
+			c4d.Vector(-box_scale, .5*box_scale, -.5*box_scale),
+			c4d.Vector(-box_scale, .5*box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, -.5*box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, -.5*box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, -box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, box_scale, -.5*box_scale),
+			c4d.Vector(-box_scale, .5*box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, box_scale, -.5*box_scale),
+			c4d.Vector(box_scale, box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, .5*box_scale, .5*box_scale),
+			c4d.Vector(box_scale, box_scale, .5*box_scale),
+			c4d.Vector(box_scale, -box_scale, .5*box_scale),
+			c4d.Vector(-box_scale, -.5*box_scale, .5*box_scale),
+			c4d.Vector(box_scale, -box_scale, .5*box_scale),
+			c4d.Vector(box_scale, -box_scale, -.5*box_scale),
+        ]
+    
+    
+    goal.ResizeObject(len(points), 0)
+    goal.SetAllPoints(points)
+    goal[c4d.SPLINEOBJECT_CLOSED] = True
+    goal[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(1, 0, 0)
+        
     prot_tag = c4d.BaseTag(c4d.Tprotection)
     goal.InsertTag(prot_tag)
     prot_tag[c4d.PROTECTION_R] = False
@@ -804,6 +870,9 @@ def create_ik_for_limb(doc, root_j, mid_j, tip_j,
     ik_tag[c4d.ID_CA_IK_TAG_POLE]    = pole
     ik_tag[c4d.ID_CA_IK_TAG_SOLVER]  = c4d.ID_CA_IK_TAG_SOLVER_2D
     ik_tag[c4d.ID_CA_IK_TAG_DRAW_POLE] = False
+    ik_tag[c4d.ID_CA_IK_TAG_STRETCH] = 0.
+    ik_tag[c4d.ID_CA_IK_TAG_SQUASH] = 0.
+    ik_tag[c4d.ID_CA_IK_TAG_GOAL_CONSTRAIN] = True
 
     _add_rotation_constraint(tip_j, goal)
 
@@ -981,13 +1050,18 @@ def setup_fkik_switch(rig_data, new_root, ik_ctrl_grp, fk_ctrl_grp):
     doc.StartUndo()
     
     try:
-        control_null = c4d.BaseObject(c4d.Onull)
+        control_null = c4d.BaseObject(c4d.Osplinetext)
         control_null.SetName("CTRL_FK_IK_Switch")
-        control_null[c4d.NULLOBJECT_DISPLAY] = c4d.NULLOBJECT_DISPLAY_DIAMOND
-        control_null[c4d.NULLOBJECT_RADIUS] = 10.
+        control_null[c4d.PRIM_TEXT_TEXT] = 'FKIK'
+        control_null[c4d.PRIM_PLANE] = c4d.PRIM_PLANE_XZ
+        control_null[c4d.PRIM_TEXT_HEIGHT] = 15
         control_null[c4d.ID_BASEOBJECT_USECOLOR] = 2
-        control_null[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(1, 1, 0)
-        control_null.SetAbsPos(c4d.Vector(50, 50, -70))
+        control_null[c4d.ID_BASEOBJECT_COLOR] = c4d.Vector(.9, .3, .1)
+
+        mg = control_null.GetMg()
+        mg *= utils.MatrixRotX(utils.DegToRad(180))
+        control_null.SetMg(mg)
+        control_null.SetAbsPos(c4d.Vector(40, 40, -70))
         
         bc = c4d.GetCustomDatatypeDefault(c4d.DTYPE_REAL)
         bc[c4d.DESC_NAME] = "FK/IK"
@@ -998,7 +1072,7 @@ def setup_fkik_switch(rig_data, new_root, ik_ctrl_grp, fk_ctrl_grp):
         bc[c4d.DESC_STEP] = 0.01
         
         element = control_null.AddUserData(bc)
-        control_null[element] = 0.0
+        control_null[element] = 1.0
         
         control_null.InsertUnder(rig_data["groups"]["rig"])
         doc.AddUndo(c4d.UNDOTYPE_NEWOBJ, control_null)
@@ -1061,12 +1135,28 @@ def main():
     
     mix = ctrl[c4d.ID_USERDATA, 1]
     
-    fk_grp = doc.SearchObject("{fk_grp_name}")
+    fk_grp = total_root.GetDown().GetDown().GetDown().GetNext().GetNext()
     if fk_grp:
-        fk_grp[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
-        fk_grp[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+        armature_fk = fk_grp.GetDown().GetNext()
+        hip_off = fk_grp.GetDown().GetDown()
 
-    ik_grp = doc.SearchObject("{ik_grp_name}")
+        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
+        armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+
+        spine_fk = hip_off.GetDown().GetDown()
+        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
+        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+
+        rhip_fk = spine_fk.GetNext()
+        rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
+        rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+
+        lhip_fk = rhip_fk.GetNext()
+        lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix < 0.99 else 1
+        lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix < 0.99 else 1
+
+
+    ik_grp = fk_grp.GetNext()
     if ik_grp:
         ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 0 if mix > 0.01 else 1
         ik_grp[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 0 if mix > 0.01 else 1
