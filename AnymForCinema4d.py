@@ -118,15 +118,15 @@ ROOT Hips
                 CHANNELS 3 Zrotation Yrotation Xrotation
                 JOINT Neck
                 {
-                    OFFSET 0.000000 0.017704 0.145760
+                    OFFSET 0.000000 0.017704 0.12760
                     CHANNELS 3 Zrotation Yrotation Xrotation
                     JOINT Head
                     {
-                        OFFSET  0.000000 -0.019722 0.067202
+                        OFFSET  0.000000 -0.019722 0.007202
                         CHANNELS 3 Zrotation Yrotation Xrotation
                         End Site
                         {
-                            OFFSET 0.000000 0.000000 0.200000
+                            OFFSET 0.000000 0.000000 0.130000
                         }
                     }
                 }
@@ -195,7 +195,6 @@ ANYM_POSES = {
     'running': '0.0 0.0 0.944308 12.812485 -3.764145 -3.449099 6.162934 -2.591651 21.884037 -16.779459 5.769927 1.611377 12.924832 2.332486 2.128104 0.000000 0.000000 -0.000001 2.281804 7.332328 -16.747847 -10.971671 -0.227808 8.013506 -23.763674 -7.757531 -2.377268 0.000000 0.000000 -0.000001 -10.430504 6.608937 6.446684 -10.014379 -4.599386 6.985147 -10.106457 -0.428153 2.249650 8.424983 -2.053782 -10.427315 2.427841 1.754064 0.686918 -6.744412 -1.306699 4.014442 -37.160491 65.066568 -17.400981 -107.616498 0.533386 23.300145 -20.239555 -7.541115 -2.493251 -8.147590 2.082604 4.206349 -35.837155 -62.851323 58.385568 113.784891 1.138298 20.943669 23.422029 -4.067571 -27.872150\n',
     'crouched': '0.0 0.0 0.792000 -7.587353 -3.244431 -5.244226 10.449458 -2.692427 1.237742 8.725213 8.053955 59.866197 28.034230 4.273684 -27.513477 -0.000001 -0.000000 0.000000 -12.310561 4.514536 -49.888928 -24.246104 5.546499 49.671887 -30.678573 9.327886 5.286487 0.000001 0.000000 0.000000 -8.409343 1.527181 46.302820 -4.850420 0.085146 10.987337 -3.818213 -0.937031 2.779952 15.485148 4.624125 9.982532 6.171311 -0.166689 -33.296183 -22.539460 -6.687543 -7.196572 -42.859961 27.952473 -40.464302 -95.768290 -24.000663 9.008869 -17.402181 -4.216924 19.540276 20.828827 7.671515 -3.644733 22.885188 -70.705963 -26.571569 73.503613 7.590814 9.765324 12.214401 -0.851391 0.037118\n',
     'fighting': '0.0 0.0 0.929197 1.998556 0.365758 -2.714235 11.078149 -15.233524 -13.417147 15.345969 0.333671 13.138032 12.556353 10.035754 18.094387 0.000000 0.000000 -0.000001 -7.943415 11.946518 7.718570 -9.117149 -5.011846 5.266846 -16.635733 -4.257653 0.560239 0.000000 0.000000 -0.000001 0.645713 -0.742055 11.902913 3.841259 2.161500 -1.203929 0.955819 0.166722 -0.892026 12.257349 -0.606808 2.459871 15.515777 3.088477 13.207125 -10.436967 -19.768036 -9.090913 -52.863180 56.077539 -40.028783 -112.513607 -29.267658 25.987605 -6.362055 -16.723496 -3.005818 13.895320 20.171606 -7.156372 83.480282 -55.718614 -57.387083 110.505613 0.414810 22.901932 13.447608 21.708462 -25.038953\n',
-    'sitting': '0.0 0.0 0.650314 0.148728 -0.260789 -21.601060 -0.428280 -9.546223 -47.886655 16.466000 13.628888 81.110183 13.259980 -3.624257 -0.020250 0.000000 0.000000 -0.000001 0.467240 6.678833 -47.886950 -9.634909 -8.815358 83.027363 -5.309852 -0.777132 -3.418623 0.000000 0.000000 -0.000001 0.400235 -0.105420 38.127067 -0.226107 -1.283918 -3.109104 0.555484 -0.836622 -2.611138 2.817394 6.459249 -8.912316 -4.327486 -2.552109 -22.467345 -4.756869 -11.397186 -1.170811 -91.265791 82.624034 -70.572455 -21.184846 -4.910739 18.320765 -2.831934 3.493047 13.986522 10.215900 7.534187 0.647334 44.359946 -77.712666 -35.760574 19.899903 5.481128 11.546334 4.304808 3.603755 1.737062\n',
 }
 
 BVH_JOINT_ORDER = [
@@ -361,12 +360,8 @@ def import_bvh_single_frame(motion_string, name, scale=100):
     doc = c4d.documents.GetActiveDocument()
     bvh_content_string = HEADER + motion_string
 
-    try:
-        lines = bvh_content_string.splitlines()
-        root_bvh_joint, all_bvh_joints, ordered_channels_for_motion, frame_values = parse_bvh_data(lines, scale=scale)
-    except ValueError as e:
-        print(f"BVH Import Error: {e}")
-        return False
+    lines = bvh_content_string.splitlines()
+    root_bvh_joint, all_bvh_joints, ordered_channels_for_motion, frame_values = parse_bvh_data(lines, scale=scale)
 
     bvh_group_null = c4d.BaseObject(c4d.Onull)
     bvh_group_null.SetName(name)
@@ -416,6 +411,7 @@ def import_bvh_single_frame(motion_string, name, scale=100):
         
         current_value_idx += 1
 
+    pose_data = {}
     for joint_name, data in joint_motion_data.items():
         bvh_joint_data = all_bvh_joints[joint_name]
         c4d_obj = bvh_joint_data.c4d_object
@@ -429,18 +425,15 @@ def import_bvh_single_frame(motion_string, name, scale=100):
         
         bvh_rotation_matrix = mat_z * mat_y * mat_x
         
+        joint_hpb = c4d.utils.MatrixToHPB(bvh_rotation_matrix)
         if joint_name == root_bvh_joint.name:
-            c4d_obj.SetAbsPos(data['pos'])
-            root_hpb = c4d.utils.MatrixToHPB(bvh_rotation_matrix)
-            c4d_obj.SetAbsRot(root_hpb) 
-        
-        else:
-            joint_hpb = c4d.utils.MatrixToHPB(bvh_rotation_matrix)
-            c4d_obj.SetRelRot(joint_hpb)
+            pose_data[joint_name] = joint_hpb, data['pos']
+        else:    
+            pose_data[joint_name] = joint_hpb
 
     c4d.EventAdd()
 
-    return bvh_group_null
+    return bvh_group_null, pose_data
 
 def get_armature_data(root_c4d_object, scale=100):
     all_joint_data = {}
@@ -549,7 +542,7 @@ def insert_under_null(doc, obj, name):
     return grp
 
 def create_fkik_skeletons(main_group):
-    bind_root = main_group.GetDown()
+    bind_root = FindChildByName(main_group, 'Hips')
     doc = bind_root.GetDocument()
     doc.StartUndo()
 
@@ -626,10 +619,10 @@ def create_fk_controls(
         'Spine_FK': 16,
         'Spine1_FK': 18,
         'Spine2_FK': 20,
-        'Neck_FK': 15,
-        'Head_FK': 15,
-        'LeftShoulder_FK': 12,
-        'RightShoulder_FK': 12,
+        'Neck_FK': 10,
+        'Head_FK': 10,
+        'LeftShoulder_FK': 9,
+        'RightShoulder_FK': 9,
         'LeftArm_FK': 9,
         'RightArm_FK': 9,
     }
@@ -677,6 +670,18 @@ def create_fk_controls(
         offset = c4d.BaseObject(c4d.Onull)
         offset.SetName(f"{ctrl.GetName()}_offset")
         offset.SetMg(j.GetMg()) 
+
+        base_pos = offset.GetRelPos()
+        if 'head' in j_name.lower():
+            base_pos.y += 15
+        elif 'neck' in j_name.lower():
+            base_pos.y += 5
+        elif 'leftshoulder' in j_name.lower():
+            base_pos.x += 5
+        elif 'rightshoulder' in j_name.lower():
+            base_pos.x -= 5
+        offset.SetRelPos(base_pos)
+            
         ctrl.InsertUnder(offset)
         doc.InsertObject(offset)
 
@@ -1022,17 +1027,6 @@ def setup_fkik_switch(rig_data, new_root, ik_ctrl_grp, fk_ctrl_grp, model_import
 from c4d import utils
 import math
 
-def normalize_angle(angle):
-    while angle > math.pi:
-        angle -= 2 * math.pi
-    while angle < -math.pi:
-        angle += 2 * math.pi
-    return angle
-
-def blend_angles(a1, a2, mix):
-    diff = normalize_angle(a2 - a1)
-    return a1 + diff * mix
-
 def main():
     def FindChildByName(parent, name):
         obj = parent.GetDown()
@@ -1067,15 +1061,19 @@ def main():
         armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
         armature_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
-        spine_fk = hip_off.GetDown().GetDown()
-        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
-        spine_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
+        leftarm_fk = FindChildByName(fk_grp, 'LeftArm_FKCtrl')
+        leftarm_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
+        leftarm_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
-        rhip_fk = spine_fk.GetNext()
+        rightarm_fk = FindChildByName(fk_grp, 'RightArm_FKCtrl')
+        rightarm_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
+        rightarm_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
+
+        rhip_fk = FindChildByName(fk_grp, 'LeftHip_FKCtrl')
         rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
         rhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
-        lhip_fk = rhip_fk.GetNext()
+        lhip_fk = FindChildByName(fk_grp, 'RightHip_FKCtrl')
         lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = val
         lhip_fk[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = val
 
@@ -1112,23 +1110,21 @@ def main():
         
         pos = fk_mg.off * (1.0 - mix) + ik_mg.off * mix
         
-        fk_rot = utils.MatrixToHPB(fk_mg)
-        ik_rot = utils.MatrixToHPB(ik_mg)
-        
-        # Blend each angle component using shortest path
-        h = blend_angles(fk_rot.x, ik_rot.x, mix)
-        p = blend_angles(fk_rot.y, ik_rot.y, mix)
-        b = blend_angles(fk_rot.z, ik_rot.z, mix)
-        
-        rot = c4d.Vector(h, p, b)
-        
-        mg = utils.HPBToMatrix(rot)
-        mg.off = pos
-        
+        q_fk = c4d.Quaternion()
+        q_fk.SetMatrixNorm(fk_mg)  
+        q_ik = c4d.Quaternion()
+        q_ik.SetMatrixNorm(ik_mg)  
+
+        if utils.QDot(q_fk, q_ik) < 0:
+            q_ik = utils.QMulS(q_ik, -1)
+
+        q_blend = utils.QSlerp(q_fk, q_ik, mix)
+
+        mg = q_blend.GetMatrix()
+        mg.off = pos 
         parent = bind.GetUp()
         if parent:
             mg = ~parent.GetMg() * mg
-        
         bind.SetMl(mg)
     
     c4d.EventAdd(c4d.EVENT_ANIMATE)
@@ -1265,9 +1261,26 @@ class AnymToolDialog(gui.GeDialog):
         success = c4d.documents.MergeDocument(doc, filepath, FLAGS)
 
         target_armature = doc.SearchObject('Armature')
+        mxhips = FindChildByName(target_armature, 'mixamorig1:Hips')
+        
+        mxhips.SetAbsPos(c4d.Vector(0,0,0))
+        
+        target_armature.SetAbsPos(c4d.Vector(0,0,0))
         mg = target_armature.GetMg()
         mg *= utils.MatrixRotZ(utils.DegToRad(90))
+        mg *= utils.MatrixRotY(utils.DegToRad(90))
         target_armature.SetMg(mg)
+        c4d.EventAdd() 
+        doc = c4d.documents.GetActiveDocument()
+        doc.ExecutePasses(
+            None,      
+            True,      
+            True,      
+            True,      
+            c4d.BUILDFLAGS_NONE
+        )
+        c4d.EventAdd() 
+
         target_armature[c4d.ID_BASEOBJECT_ABS_SCALE] = c4d.Vector(.95, .95, .95)
         target_mesh = doc.SearchObject('Ch36')
 
@@ -1320,7 +1333,7 @@ class AnymToolDialog(gui.GeDialog):
             ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_MAINTAIN] = True
             ctag[10001] = source_bone
             ctag[c4d.ID_CA_CONSTRAINT_TAG_PSR_WEIGHT] = 1.0
-
+        
     def CreateLayout(self):
         self.SetTitle("ANYM v1.0")
         
@@ -1522,7 +1535,28 @@ class AnymToolDialog(gui.GeDialog):
                 name = base_name + "{:03d}".format(i)
                 i += 1
 
-            new_root = import_bvh_single_frame(pose_line, name=name)
+            new_root, pose_data = import_bvh_single_frame(pose_line, name=name)
+            
+            if model_import_enabled:
+                self.import_and_constrain_model(new_root)
+                c4d.EventAdd() 
+                doc = c4d.documents.GetActiveDocument()
+                doc.ExecutePasses(
+                    None,      
+                    True,      
+                    True,      
+                    True,      
+                    c4d.BUILDFLAGS_NONE
+                )
+                c4d.EventAdd() 
+
+            for joint_name, joint_data in pose_data.items():
+                joint = FindChildByName(new_root, joint_name)
+                if joint_name == 'Hips':
+                    joint.SetAbsRot(joint_data[0]) 
+                    joint.SetAbsPos(joint_data[1])
+                else:
+                    joint.SetRelRot(joint_data)
             
             if fkik_enabled:
                 out = create_fkik_skeletons(new_root)
@@ -1552,9 +1586,6 @@ class AnymToolDialog(gui.GeDialog):
                 mg = new_root.GetMg()
                 mg *= utils.MatrixRotX(utils.DegToRad(-90))
                 new_root.SetMg(mg)
-
-            if model_import_enabled:
-                self.import_and_constrain_model(new_root)
 
             c4d.EventAdd()
             return True
@@ -1643,7 +1674,7 @@ class AnymToolDialog(gui.GeDialog):
 
         for pose in self.poses:
             armature = doc.SearchObject(pose.selected_armature_name)
-            main_root = armature.GetDown().GetDown().GetDown().GetNext()
+            main_root = FindChildByName(armature, 'Hips')
 
             if pose.is_static:
                 idx = pose.frame
