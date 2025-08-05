@@ -673,7 +673,7 @@ def create_fk_controls(
 
         base_pos = offset.GetRelPos()
         if 'head' in j_name.lower():
-            base_pos.y += 15
+            base_pos.y += 12
         elif 'neck' in j_name.lower():
             base_pos.y += 5
         elif 'leftshoulder' in j_name.lower():
