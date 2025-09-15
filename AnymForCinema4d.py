@@ -1094,8 +1094,8 @@ def main():
         armature_ik[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
         armature_model[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 1
         armature_model[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
-        #armature_base[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 1
-        #armature_base[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
+        armature_base[c4d.ID_BASEOBJECT_VISIBILITY_EDITOR] = 1
+        armature_base[c4d.ID_BASEOBJECT_VISIBILITY_RENDER] = 1
 
     for joint_info in joints:
         bind = FindChildByName(total_root, joint_info["bind_name"])
@@ -1876,3 +1876,23 @@ def main():
 if __name__ == "__main__":
     dialog = AnymToolDialog()
     dialog.Open(dlgtype=c4d.DLG_TYPE_ASYNC, pluginid=PLUGIN_ID, defaultw=340, defaulth=680)
+
+
+
+if __name__ == "__main__":
+	def get_plugin_root():
+		return r"C:\Users\Dell\Desktop\ace_spring_2024\docs\ANYM_Maya\gh\ANYM_For_Maya_MAIN\scripts"
+
+	PLUGIN_ROOT = get_plugin_root()
+	ICONS_DIR = os.path.join(PLUGIN_ROOT, '..', 'res', 'icons')
+	MODEL_PATH = os.path.join(PLUGIN_ROOT, '..', 'res', 'model', 'AnymModel.fbx')
+	DATA_DIR = os.path.join(os.path.expanduser('~'), '.AnymForMaya')
+	DEPENDENCIES_DIR = os.path.join(PLUGIN_ROOT, '..', 'dependencies')
+
+	if not os.path.exists(DATA_DIR):
+		os.makedirs(DATA_DIR)
+
+	if DEPENDENCIES_DIR not in sys.path:
+		sys.path.insert(0, DEPENDENCIES_DIR)
+
+	AnymTool()
