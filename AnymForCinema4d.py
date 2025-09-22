@@ -1722,6 +1722,14 @@ class AnymToolDialog(gui.GeDialog):
             c4d.gui.MessageDialog(f"Warning: Two or more armatures have keyframes set on the same frame index.", type=c4d.GEMB_ICONEXCLAMATION)
             return False
 
+        diff = [
+            indices_total[i + 1] - indices_total[i] for i in range(len(indices_total) - 1)
+        ] if len(indices_total) > 1 else indices_total
+        
+        if max(diff) / fps > 5:
+            c4d.gui.MessageDialog(f"Warning: Two or more keyframes are separated by more than the maximum allowed duration (5 seconds).", type=c4d.GEMB_ICONEXCLAMATION)
+            return False
+
         zipped_sorted = sorted(
             list(zip(indices_total, rots_total, root_pos_total)),
             key=lambda t: t[0]
